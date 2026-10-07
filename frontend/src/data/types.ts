@@ -18,6 +18,8 @@ export type ModuleMeta = {
   actions: string[]
   actionTargets: Record<string, string>
   metrics: string[]
+  /** 终态：进入这些状态后不允许再执行任何动作（例如已完工不许改回检修中）。 */
+  finalStatuses?: string[]
 }
 
 export type PageResult = {

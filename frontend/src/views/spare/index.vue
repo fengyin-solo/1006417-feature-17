@@ -63,6 +63,26 @@
       </tbody>
     </table>
 
+    <section class="ledger">
+      <h3>备件领用清单</h3>
+      <p class="page-desc">检修派工确认的备件领用会回写到这里；同一张领用单重复提交只扣一次在库量。</p>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th v-for="column in issueColumns" :key="column">{{ column }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="issue in issues" :key="String(issue.id)">
+            <td v-for="column in issueColumns" :key="column">{{ issue[column] ?? '—' }}</td>
+          </tr>
+          <tr v-if="!issues.length">
+            <td :colspan="issueColumns.length" class="empty-state">暂无领用记录，检修派工领用备件后自动登记</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
     <footer class="page-foot">
       <span>共 {{ total }} 条备件台账管理记录</span>
       <span v-if="errorMessage" class="error-text">{{ errorMessage }}</span>
@@ -76,18 +96,21 @@ import { computed, onMounted, ref } from 'vue'
 import {
   downloadEntries,
   listEntries,
+  listSpareIssues,
   moduleMeta,
   runAction as applyAction,
 } from '@/api/local-service'
 import type { EntryRow } from '@/data/types'
 
 const meta = moduleMeta('spare')
-const columns = ["备件编号", "备件名称", "规格型号", "所属系统", "存放库位", "最低储备量", "责任人员", "备件状态"]
+const columns = ["备件编号", "备件名称", "规格型号", "所属系统", "存放库位", "在库量", "最低储备量", "责任人员", "备件状态"]
 const actions = ["登记入库", "办理领用", "报废备件"]
 const statuses = ["待入库", "在库可用", "已领用", "已报废"]
 const stats = [{"label": "在库可用备件", "value": 0}, {"label": "已领用备件", "value": 0}, {"label": "待入库备件", "value": 0}]
+const issueColumns = ["领用单号", "检修编号", "备件编号", "备件名称", "领用数量", "接单班组", "经办人", "办理时间"]
 
 const rows = ref<EntryRow[]>([])
+const issues = ref<EntryRow[]>([])
 const total = ref(0)
 const errorMessage = ref('')
 const filters = ref<Record<string, string>>({})
@@ -128,6 +151,7 @@ function reload() {
     const payload = listEntries(meta.key, filters.value)
     rows.value = payload.items
     total.value = payload.total
+    issues.value = listSpareIssues()
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '备件台账管理列表读取失败'
   }
