@@ -68,4 +68,11 @@ npm run build
 - 字段、状态、动作与流转目标集中在 `frontend/src/data/modules.ts`；示例数据在
   `frontend/src/data/seed.ts`。
 - 状态流转只允许在 `local-service.ts` 里改，页面组件不做业务判断。
+- 列表与详情的状态字段（如检修状态、备件状态）一律以记录的 `status` 为准，两边不会再对不上。
+- 登记按业务编号（如检修编号）幂等：同一编号重复提交只落一条；编辑结果持久化在 localStorage，
+  刷新不丢。
+- 检修派工：按检修类别与检修班组带出建议接单班组（`frontend/src/data/team-rules.ts`），建议只作
+  参考，最终以检修主管确认的接单班组为准；已完工的检修记录是终态，不许再改回检修中。
+- 派工会把领用单回写到备件台账的领用清单（本地数据键 `spare-issue`），办完后备件在库量跟着减；
+  同一张领用单重复提交只扣一次。
 - 想回到初始数据：清掉浏览器里 `waste-to-energy-plant:entries` 这一项，或调用 `resetModule(模块)`。
